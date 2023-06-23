@@ -40,8 +40,9 @@ sub usage
 
     print <<"USAGE";
 Usage: $0 [switches]
-    -h, --help       this help screen
-    -V, --version    print version
+    -c, --config=<path>    path to config file
+    -h, --help             this help screen
+    -V, --version          print version
 USAGE
     exit $exit_code;
 }
