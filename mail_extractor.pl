@@ -34,6 +34,8 @@ die "$0: configuration file `$Config_file' is not readable\n" unless -r $Config_
 
 my %config = parse_config($Config_file);
 
+validate_config(\%config);
+
 sub usage
 {
     my ($exit_code) = @_;
@@ -104,4 +106,39 @@ sub parse_config
     }
 
     return %config;
+}
+
+sub validate_config
+{
+    my ($config) = @_;
+
+    my @keys = qw(source_path output_path log_file excludes);
+
+    my %types = (
+        source_path => '',
+        output_path => '',
+        log_file    => '',
+        excludes    => 'ARRAY',
+    );
+    foreach my $key (@keys) {
+        die "$0: configuration key: $key (key not exists)\n"
+          unless exists $config->{$key};
+
+        die "$0: configuration key: $key (wrong value type)\n"
+          unless ref $config->{$key} eq $types{$key};
+
+        next if $types{$key} ne '';
+        die "$0: configuration key: $key (is empty string)\n"
+          unless length $config->{$key};
+    }
+
+    foreach my $key (qw(source_path output_path)) {
+        die "$0: configuration key: $key (not a directory)\n"
+          unless -e $config->{$key} && -d $config->{$key};
+    }
+    my $key = 'log_file';
+    if (-e $config->{$key}) {
+        die "$0: configuration key: $key (not a file)\n"
+          unless -f $config->{$key};
+    }
 }
