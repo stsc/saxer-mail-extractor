@@ -76,15 +76,15 @@ sub parse_config
 
     while ($string !~ /\G\Z/cg) {
         # multiple
-        if ($string =~ /\G(\S+)\s*=\s*\((.*?)\)\n/cgs) {
+        if ($string =~ /\G(\S+)[ \t]*=[ \t]*\((.*?)\)\n/cgs) {
             my ($key, $value) = ($1, $2);
-            unless ($value =~ /^\s*\n(?:\s*(?:['"].*?['"]|\S+)\s*\n)*\s*$/) {
+            unless ($value =~ /^[ \t]*\n(?:[ \t]*(?:['"].*?['"]|\S+)[ \t]*\n)*[ \t]*$/) {
                 die "$0: configuration key: $key (not multi-line)\n";
             }
-            my @values = map { s/^\s+//; s/\s+$//; $extract_value->($key, $_) } grep /\S/, split /\n/, $value;
+            my @values = map { s/^[ \t]+//; s/[ \t]+$//; $extract_value->($key, $_) } grep /[^ \t]/, split /\n/, $value;
             $config{$key} = [ @values ];
         } # single
-        elsif ($string =~ /\G(\S+)\s*=\s*(.*?)\n/cg) {
+        elsif ($string =~ /\G(\S+)[ \t]*=[ \t]*([^()]*?)\n/cg) {
             my ($key, $value) = ($1, $2);
             if ($value =~ $re_quoted_value) {
                 die "$0: configuration key: $key (unbalanced quotes)\n" if $1 ne $3;
@@ -94,10 +94,10 @@ sub parse_config
                 die "$0: configuration key: $key (bad value)\n";
             }
         } # comment
-        elsif ($string =~ /\G\s*\#.*?\n/cg) {
+        elsif ($string =~ /\G[ \t]*\#.*?\n/cg) {
             next;
         } # blank
-        elsif ($string =~ /\G\s*\n/cg) {
+        elsif ($string =~ /\G[ \t]*\n/cg) {
             next;
         } # invalid
         else {
