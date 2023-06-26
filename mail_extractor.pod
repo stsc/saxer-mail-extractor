@@ -1,0 +1,75 @@
+=head1 CONFIGURATION FILE
+
+=head2 Format
+
+The configuration file format allows for either a single-, multi-, comment- or blank-line entry.
+
+Each single-line entry must adhere to following format:
+
+    key = 'value'
+    # or
+    key = "value"
+
+Each multi-line entry must adhere to following format:
+
+    key = (
+        'value1'
+        "value2"
+        ..
+    )
+
+Each comment-line entry may begin with whitespace and must be followed by #.
+
+Each blank-line entry is either a whitespace-only or an entirely empty line.
+
+A valid configuration file with sample values looks as follows:
+
+    source_path = '/path/to/directory'
+    output_path = '/path/to/directory'
+    log_file    = '/path/to/file'
+    excludes    = (
+    )
+
+=head2 Diagnostics
+
+All following diagnostics emitted are fatal (followed by the immediate termination of the script).
+
+=over 4
+
+=item * C<unbalanced quotes>
+
+Quotes are mixed, e.g. C<'"> or C<"'>.
+
+=item * C<bad value>
+
+Value is not fully quoted or empty.
+
+=item * C<not multi-line>
+
+The multi-line value does not span multiple lines.
+
+=item * C<cannot be parsed>
+
+The line in question does not match any pattern.
+
+=item * C<key not exists>
+
+The mandatory key does not exist.
+
+=item * C<wrong value type>
+
+The value's type (single/multi-line) is wrong.
+
+=item * C<is empty string>
+
+The value is an empty string.
+
+=item * C<not a directory>
+
+The value is not a directory.
+
+=item * C<not a file>
+
+The value is not a regular file.
+
+=back
