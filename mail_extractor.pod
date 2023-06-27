@@ -1,3 +1,25 @@
+=head1 COMMAND-LINE OPTIONS
+
+    -c, --config=<path>    path to config file
+    -h, --help             this help screen
+    -V, --version          print version
+
+=over 4
+
+=item * C<-c, --config=<path>>
+
+Path to configuration file.
+
+=item * C<-h, --help>
+
+Show usage screen.
+
+=item * C<-V, --version>
+
+Print version of script.
+
+=back
+
 =head1 CONFIGURATION FILE
 
 =head2 Format
