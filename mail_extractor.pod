@@ -6,7 +6,7 @@
 
 =over 4
 
-=item * C<-c, --config=<path>>
+=item * C<< -c, --config=<path> >>
 
 Path to configuration file.
 
