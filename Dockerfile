@@ -1,6 +1,9 @@
 # Dockerfile
 FROM perl:latest
 
+# Label the parent repository
+LABEL org.opencontainers.image.source=https://github.com/stsc/saxer-mail-extractor
+
 # install cron
 RUN apt-get -y update && apt-get -y install cron
 
