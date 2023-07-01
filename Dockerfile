@@ -13,7 +13,7 @@ RUN apt-get -y update \
 	&& rm -rf /etc/cron.*/*
 
 # Copy ./app to some place in the container
-COPY ./app /
+COPY ./app /app
 # Copy config directory
 COPY ./config /config.example
 RUN mkdir /config
