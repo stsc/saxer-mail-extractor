@@ -1,0 +1,18 @@
+name: Docker Image CI for GHCR
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and push the Image
+        run: |
+          docker login --username stsc --password ${{ secrets.GH_PAT }} ghcr.io
+          docker build . --tag ghcr.io/stsc/saxer-mail-extractor:latest
+          docker push ghcr.io/stsc/saxer-mail-extractor:latest
