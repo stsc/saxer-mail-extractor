@@ -5,16 +5,12 @@ set -m
 
 # config example handling
 if [ ! -r /config/crontab ] ; then
+	echo "no config/crontab, copy example config"
 	cp /config.example/crontab /config/crontab
-else
-	echo "config/crontab not readable! exiting..."
-	exit 1
 fi
 if [ ! -r /config/mail_extractor.cfg ] ; then
+	echo "no config/mail_extractor.cfg, copy example config"
 	cp /config.example/mail_extractor.cfg /config/mail_extractor.cfg
-else
-	echo "config/mail_extractor.cfg not readable! exiting..."
-	exit 1
 fi
 
 # Copy crontab file to the cron.d directory
