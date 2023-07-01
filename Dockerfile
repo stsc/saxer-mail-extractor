@@ -15,7 +15,8 @@ RUN apt-get -y update \
 # Copy ./app to some place in the container
 COPY ./app /
 # Copy config directory
-COPY ./config /
+COPY ./config /config.example
+RUN mkdir /config
 # Change workdir
 #WORKDIR /app
 # Copy entrypoint.sh to /entrypoint.sh in the container
