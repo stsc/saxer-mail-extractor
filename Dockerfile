@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.source https://github.com/stsc/saxer-mail-extract
 
 # install cron & nginx
 RUN apt-get -y update \
-	&& DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install -y cron nginx \
+	&& DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install -y cron nginx gettext-base \
 	# Remove package lists for smaller image sizes
 	&& rm -rf /var/lib/apt/lists/* \
 	&& which cron \
