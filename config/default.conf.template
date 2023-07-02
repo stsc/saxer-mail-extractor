@@ -1,7 +1,7 @@
-
 server {
 
-    listen       80;
+    listen 80 default_server;
+    listen [::]:80 default_server;
     server_tokens off;
 
     # special url for external healthchecks (monitoring systems, AWS Route 53 healthchecks, ALB etc)  

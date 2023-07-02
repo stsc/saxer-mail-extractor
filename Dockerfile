@@ -6,14 +6,14 @@ LABEL org.opencontainers.image.source https://github.com/stsc/saxer-mail-extract
 
 # install cron & nginx
 RUN apt-get -y update \
-	&& DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install -y cron nginx gettext-base \
+	&& DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install -y cron nginx \
 	# Remove package lists for smaller image sizes
 	&& rm -rf /var/lib/apt/lists/* \
 	&& which cron \
 	&& rm -rf /etc/cron.*/*
 
 # Copy nginx template
-COPY ./config/default.conf.template /etc/nginx/conf.d/
+COPY ./config/default.conf.template /etc/nginx/sites-available/default
 # expose port for nginx
 EXPOSE 80
 # Copy ./app to some place in the container
