@@ -16,6 +16,7 @@ server {
        expires -1;
        autoindex on;
        default_type text/plain;
+       autoindex_localtime on;
     }
 
 }
