@@ -4,6 +4,10 @@ FROM perl:latest
 # Label the parent repository
 LABEL org.opencontainers.image.source https://github.com/stsc/saxer-mail-extractor
 
+# set timezone
+ENV TZ=Europe/Zurich
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # install cron & nginx
 RUN apt-get -y update \
 	&& DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install -y cron nginx \
