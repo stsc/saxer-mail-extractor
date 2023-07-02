@@ -14,7 +14,12 @@
 
 use strict;
 use warnings;
+use constant true  => 1;
+use constant false => 0;
 
+use File::Find;
+use File::Spec;
+use File::Type;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
 
 my $VERSION = '0.00';
@@ -35,6 +40,8 @@ die "$0: configuration file `$Config_file' is not readable\n" unless -r $Config_
 my %config = parse_config($Config_file);
 
 validate_config(\%config);
+
+gather_files($config{source_path});
 
 sub usage
 {
@@ -141,4 +148,58 @@ sub validate_config
         die "$0: configuration key: $key (not a file)\n"
           unless -f $config->{$key};
     }
+}
+
+sub gather_files
+{
+    my ($source_path) = @_;
+
+    my $ft = File::Type->new;
+
+    my $dir_matches = sub
+    {
+        my ($path, $regex) = @_;
+
+        my @dirs = File::Spec->splitdir($path);
+
+        return false unless @dirs >= 2;
+
+        for (my $i = 0; $i <= $#dirs - 1; $i++) {
+            return true if $dirs[$i]     =~ /^\S+\@\S+$/
+                        && $dirs[$i + 1] =~ /^$regex$/;
+        }
+        return false;
+    };
+
+    find({
+        wanted => sub {
+            # file?
+            if (-f $_) { # plain
+                if ($dir_matches->($File::Find::dir, qr/(?:Archive-)?Mail/)) {
+                    parse_plain($File::Find::name) if $ft->mime_type($File::Find::name) eq 'message/rfc822';
+                } # json
+                elsif ($dir_matches->($File::Find::dir, qr/Contact/)) {
+                    parse_json($File::Find::name); # all files JSON!
+                } # pdf
+                elsif ($dir_matches->($File::Find::dir, qr/OneDrive/)) {
+                    parse_pdf($File::Find::name) if /(?!^)\.(.+)$/ && lc $1 eq 'pdf';
+                }
+            }
+        },
+    }, $source_path);
+}
+
+sub parse_plain
+{
+    my ($file) = @_;
+}
+
+sub parse_json
+{
+    my ($file) = @_;
+}
+
+sub parse_pdf
+{
+    my ($file) = @_;
 }
