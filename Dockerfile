@@ -4,14 +4,18 @@ FROM perl:latest
 # Label the parent repository
 LABEL org.opencontainers.image.source https://github.com/stsc/saxer-mail-extractor
 
-# install cron
+# install cron & nginx
 RUN apt-get -y update \
-	&& DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install -y cron \
+	&& DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install -y cron nginx \
 	# Remove package lists for smaller image sizes
 	&& rm -rf /var/lib/apt/lists/* \
 	&& which cron \
 	&& rm -rf /etc/cron.*/*
 
+# Copy nginx template
+COPY ./config/default.conf.template /etc/nginx/conf.d/
+# expose port for nginx
+EXPOSE 80
 # Copy ./app to some place in the container
 COPY ./app /app
 # Copy config directory

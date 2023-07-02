@@ -21,6 +21,8 @@ chmod 0644 /etc/cron.d/crontab
 crontab /etc/cron.d/crontab
 # execute cron in foreground mode and put it in background
 cron -f &
+# execute nginx in foreground mode and put it in background
+envsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;' &
 # wait for all processes to exit
 wait -n
 # Exit with status of process that exited first
