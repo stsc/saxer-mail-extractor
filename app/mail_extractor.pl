@@ -17,12 +17,16 @@ use warnings;
 use constant true  => 1;
 use constant false => 0;
 
+use Email::Address;
+use Encode;
 use File::Find;
 use File::Spec;
 use File::Type;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
 
 my $VERSION = '0.00';
+
+my $CSV_file = 'addresses.csv';
 
 my %opts;
 GetOptions(\%opts, qw(c|config=s h|help V|version)) or usage(1);
@@ -41,7 +45,12 @@ my %config = parse_config($Config_file);
 
 validate_config(\%config);
 
-gather_files($config{source_path});
+my @addresses;
+gather_files($config{source_path}, \@addresses);
+
+filter_sort(\@addresses);
+
+save_csv(File::Spec->catfile($config{output_path}, $CSV_file), \@addresses);
 
 sub usage
 {
@@ -152,7 +161,7 @@ sub validate_config
 
 sub gather_files
 {
-    my ($source_path) = @_;
+    my ($source_path, $addresses) = @_;
 
     my $ft = File::Type->new;
 
@@ -176,13 +185,13 @@ sub gather_files
             # file?
             if (-f $_) { # plain
                 if ($dir_matches->($File::Find::dir, qr/(?:Archive-)?Mail/)) {
-                    parse_plain($File::Find::name) if $ft->mime_type($File::Find::name) eq 'message/rfc822';
+                    parse_plain($File::Find::name, $addresses) if $ft->mime_type($File::Find::name) eq 'message/rfc822';
                 } # json
                 elsif ($dir_matches->($File::Find::dir, qr/Contact/)) {
-                    parse_json($File::Find::name); # all files JSON!
+                    parse_json($File::Find::name, $addresses); # all files JSON!
                 } # pdf
                 elsif ($dir_matches->($File::Find::dir, qr/OneDrive/)) {
-                    parse_pdf($File::Find::name) if /(?!^)\.(.+)$/ && lc $1 eq 'pdf';
+                    parse_pdf($File::Find::name, $addresses) if /(?!^)\.(.+)$/ && lc $1 eq 'pdf';
                 }
             }
         },
@@ -191,15 +200,79 @@ sub gather_files
 
 sub parse_plain
 {
-    my ($file) = @_;
+    my ($file, $addresses) = @_;
+
+    open(my $fh, '<', $file) or die "$0: plain file `$file' cannot be opened: $!\n";
+    my $content = do { local $/; <$fh> };
+    close($fh);
+
+    if ($content =~ /^(.+?)\n{2}/s) {
+        my $header = $1;
+        foreach my $field (qw(From To Cc Bcc Reply-To)) {
+            if ($header =~ /^$field:\s+(.+?)(?=\n^\S)/ims) {
+                push @$addresses, extract_addresses($1);
+            }
+        }
+    }
 }
 
 sub parse_json
 {
-    my ($file) = @_;
+    my ($file, $addresses) = @_;
 }
 
 sub parse_pdf
 {
-    my ($file) = @_;
+    my ($file, $addresses) = @_;
+}
+
+sub extract_addresses
+{
+    my ($string) = @_;
+
+    my @addresses;
+
+    foreach my $addr (Email::Address->parse($string)) {
+        my $address = $addr->address;
+        my $phrase  = $addr->phrase // '';
+
+        $phrase = decode('MIME-Header', $phrase);
+        $phrase = do {
+            local $_ = $phrase;
+            s/^['"]//;
+            s/['"]$//;
+            $_
+        };
+        push @addresses, [ $phrase, $address ];
+    }
+
+    return @addresses;
+}
+
+sub filter_sort
+{
+    my ($addresses) = @_;
+
+    @$addresses = grep { $_->[1] !~ /no-?reply/           }
+                  grep { $_->[1] !~ /PROD\.OUTLOOK\.COM$/ }
+                  @$addresses;
+    my %seen;
+    @$addresses = sort { $a->[1] cmp $b->[1]      }  # sort alphabetically
+                  grep { !$seen{$_->[1]}++        }  # filter duplicates
+                  map  { $_->[1] = lc $_->[1]; $_ }  # lower-case address
+                  @$addresses;
+}
+
+sub save_csv
+{
+    my ($csv_file, $addresses) = @_;
+
+    open(my $fh, '>', $csv_file) or die "$0: csv file `$csv_file' cannot be opened: $!\n";
+
+    foreach my $address (@$addresses) {
+        my $entry = join q{, }, @$address;
+        print {$fh} $entry, "\n";
+    }
+
+    close($fh);
 }
