@@ -48,7 +48,7 @@ validate_config(\%config);
 my @addresses;
 gather_files($config{source_path}, \@addresses);
 
-filter_sort(\@addresses);
+filter_sort(\@addresses, $config{filter});
 
 save_csv(File::Spec->catfile($config{output_path}, $CSV_file), \@addresses);
 
@@ -128,13 +128,14 @@ sub validate_config
 {
     my ($config) = @_;
 
-    my @keys = qw(source_path output_path log_file excludes);
+    my @keys = qw(source_path output_path log_file excludes filter);
 
     my %types = (
         source_path => '',
         output_path => '',
         log_file    => '',
         excludes    => 'ARRAY',
+        filter      => 'ARRAY',
     );
     foreach my $key (@keys) {
         die "$0: configuration key: $key (key not exists)\n"
@@ -251,9 +252,18 @@ sub extract_addresses
 
 sub filter_sort
 {
-    my ($addresses) = @_;
+    my ($addresses, $filter) = @_;
 
-    @$addresses = grep { $_->[1] !~ /no-?reply/           }
+    my $filter_regex = sub
+    {
+        my ($address) = @_;
+        foreach my $regex (@$filter) {
+            return false if $address =~ /$regex/i;
+        }
+        return true;
+    };
+
+    @$addresses = grep { $filter_regex->($_->[1])         }
                   grep { $_->[1] !~ /PROD\.OUTLOOK\.COM$/ }
                   @$addresses;
     my %seen;

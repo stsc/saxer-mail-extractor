@@ -51,6 +51,8 @@ A valid configuration file with sample values looks as follows:
     log_file    = '/path/to/file'
     excludes    = (
     )
+    filter      = (
+    )
 
 =head2 Diagnostics
 
