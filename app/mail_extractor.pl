@@ -262,10 +262,8 @@ sub filter_sort
         }
         return true;
     };
+    @$addresses = grep $filter_regex->($_->[1]), @$addresses;
 
-    @$addresses = grep { $filter_regex->($_->[1])         }
-                  grep { $_->[1] !~ /PROD\.OUTLOOK\.COM$/ }
-                  @$addresses;
     my %seen;
     @$addresses = sort { $a->[1] cmp $b->[1]      }  # sort alphabetically
                   grep { !$seen{$_->[1]}++        }  # filter duplicates
