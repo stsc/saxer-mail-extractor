@@ -52,6 +52,7 @@ A valid configuration file with sample values looks as follows:
     excludes    = (
     )
     filter      = (
+        'no-?reply'
     )
 
 =head2 Diagnostics
