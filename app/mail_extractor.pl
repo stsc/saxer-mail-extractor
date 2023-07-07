@@ -275,7 +275,7 @@ sub save_csv
 {
     my ($csv_file, $addresses) = @_;
 
-    open(my $fh, '>', $csv_file) or die "$0: csv file `$csv_file' cannot be opened: $!\n";
+    open(my $fh, '>:encoding(UTF-8)', $csv_file) or die "$0: csv file `$csv_file' cannot be opened: $!\n";
 
     foreach my $address (@$addresses) {
         my $entry = join q{, }, @$address;
