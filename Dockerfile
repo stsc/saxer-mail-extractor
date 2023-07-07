@@ -14,10 +14,9 @@ RUN apt-get -y update \
 	# Remove package lists for smaller image sizes
 	&& rm -rf /var/lib/apt/lists/* \
 	&& which cron \
-	&& rm -rf /etc/cron.*/*
-
-# add Perl dependencies:
-RUN cpanm File::Type Email::Address
+	&& rm -rf /etc/cron.*/* \
+	# add Perl dependencies:
+	&& cpanm File::Type Email::Address
 
 # Copy nginx template
 COPY ./config/default.conf.template /etc/nginx/sites-available/default
