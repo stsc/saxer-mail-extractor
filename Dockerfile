@@ -16,7 +16,7 @@ RUN apt-get -y update \
 	&& which cron \
 	&& rm -rf /etc/cron.*/* \
 	# add Perl dependencies:
-	&& cpanm File::Type Email::Address Net::IDN::Encode
+	&& cpanm Email::Address File::Type Net::IDN::Encode
 
 # Copy nginx template
 COPY ./config/default.conf.template /etc/nginx/sites-available/default
