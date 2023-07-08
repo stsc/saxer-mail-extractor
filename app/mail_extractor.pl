@@ -23,6 +23,7 @@ use File::Find;
 use File::Spec;
 use File::Type;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
+use Net::IDN::Encode qw(email_to_unicode);
 
 my $VERSION = '0.00';
 
@@ -236,6 +237,8 @@ sub extract_addresses
     foreach my $addr (Email::Address->parse($string)) {
         my $address = $addr->address;
         my $phrase  = $addr->phrase // '';
+
+        $address = email_to_unicode($address);
 
         $phrase = decode('MIME-Header', $phrase);
         $phrase = do {
