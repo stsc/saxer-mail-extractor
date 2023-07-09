@@ -23,6 +23,7 @@ use File::Find;
 use File::Spec;
 use File::Type;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
+use JSON;
 use Net::IDN::Encode qw(email_to_unicode);
 
 my $VERSION = '0.00';
@@ -221,6 +222,28 @@ sub parse_plain
 sub parse_json
 {
     my ($file, $addresses) = @_;
+
+    open(my $fh, '<', $file) or die "$0: JSON file `$file' cannot be opened: $!\n";
+    my $content = do { local $/; <$fh> };
+    close($fh);
+
+    my $json;
+    unless (eval { $json = decode_json($content) }) {
+        return;
+    }
+    unless (exists $json->{client_metadata}) {
+        return;
+    }
+    my $metadata = $json->{client_metadata};
+    unless (exists $metadata->{displayName} && exists $metadata->{emailAddresses}) {
+        return;
+    }
+
+    my $phrase = $metadata->{displayName};
+
+    foreach my $address (@{$metadata->{emailAddresses}}) {
+        push @$addresses, [ $phrase, $address->{address} ];
+    }
 }
 
 sub parse_pdf
