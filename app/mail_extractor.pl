@@ -241,9 +241,11 @@ sub parse_json
 
     my $phrase = $metadata->{displayName};
 
-    foreach my $address (@{$metadata->{emailAddresses}}) {
-        my $address = email_to_unicode($address->{address});
-        push @$addresses, [ $phrase, $address ];
+    foreach my $email (@{$metadata->{emailAddresses}}) {
+        foreach my $addr (Email::Address->parse($email->{address})) {
+            my $address = email_to_unicode($addr->address);
+            push @$addresses, [ $phrase, $address ];
+        }
     }
 }
 
