@@ -1,5 +1,5 @@
 # Dockerfile
-FROM perl:latest
+FROM perl:5.36.1-bookworm
 
 # Label the parent repository
 LABEL org.opencontainers.image.source https://github.com/stsc/saxer-mail-extractor
