@@ -17,6 +17,8 @@ use warnings;
 use constant true  => 1;
 use constant false => 0;
 
+use CAM::PDF;
+use CAM::PDF::PageText;
 use Email::Address;
 use Encode;
 use File::Find;
@@ -252,6 +254,23 @@ sub parse_json
 sub parse_pdf
 {
     my ($file, $addresses) = @_;
+
+    my $pdf = CAM::PDF->new($file);
+
+    my $pages;
+    unless (eval { $pages = $pdf->numPages() }) {
+        return;
+    }
+
+    my $string;
+    for (my $i = 1; $i <= $pages; $i++) {
+        my $tree = $pdf->getPageContentTree($i);
+        $string .= CAM::PDF::PageText->render($tree) . "\n\n";
+    }
+
+    foreach my $addr (Email::Address->parse($string)) {
+        push @$addresses, [ '', $addr->address ];
+    }
 }
 
 sub extract_addresses
