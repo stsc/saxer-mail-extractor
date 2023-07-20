@@ -337,6 +337,8 @@ sub save_address
 {
     my ($address, $addresses) = @_;
 
+    $address->[1] =~ s/['"]//g;
+
     my $char = lc substr($address->[1], 0, 1) // '?';
     push @{$addresses{$char}}, $address;
 
