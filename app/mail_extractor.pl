@@ -16,6 +16,7 @@ use strict;
 use warnings;
 use constant true  => 1;
 use constant false => 0;
+use constant THRESHOLD_FLUSH => 500;
 
 use CAM::PDF;
 use CAM::PDF::PageText;
@@ -49,12 +50,29 @@ my %config = parse_config($Config_file);
 
 validate_config(\%config);
 
-my @addresses;
-gather_files($config{source_path}, \@addresses);
+my $csv_file_char = sub
+{
+    my ($file, $char) = @_;
+    (my $csv_file = $file) =~ s/(?=\.)/_$char/;
+    return File::Spec->catfile($config{output_path}, $csv_file);
+};
 
-filter_sort(\@addresses, $config{filter});
+my %addresses;
+gather_files($config{source_path}, \%addresses);
 
-save_csv(File::Spec->catfile($config{output_path}, $CSV_file), \@addresses);
+foreach my $char (keys %addresses) {
+    my $csv_file = $csv_file_char->($CSV_file, $char);
+
+    save_csv($csv_file, $addresses{$char}) if @{$addresses{$char}};
+    @{$addresses{$char}} = ();
+
+    my @addresses;
+    read_csv($csv_file, \@addresses);
+
+    filter_sort(\@addresses, $config{filter});
+
+    write_csv($csv_file, \@addresses);
+}
 
 sub usage
 {
@@ -215,7 +233,7 @@ sub parse_plain
         my $header = $1;
         foreach my $field (qw(From To Cc Bcc Reply-To)) {
             if ($header =~ /^$field:\s+(.+?)(?=\n^\S)/ims) {
-                push @$addresses, extract_addresses($1);
+                extract_addresses($1, $addresses);
             }
         }
     }
@@ -246,7 +264,7 @@ sub parse_json
     foreach my $email (@{$metadata->{emailAddresses}}) {
         foreach my $addr (Email::Address->parse($email->{address})) {
             my $address = email_to_unicode($addr->address);
-            push @$addresses, [ $phrase, $address ];
+            save_address([ $phrase, $address ], $addresses);
         }
     }
 }
@@ -269,15 +287,13 @@ sub parse_pdf
     }
 
     foreach my $addr (Email::Address->parse($string)) {
-        push @$addresses, [ '', $addr->address ];
+        save_address([ '', $addr->address ], $addresses);
     }
 }
 
 sub extract_addresses
 {
-    my ($string) = @_;
-
-    my @addresses;
+    my ($string, $addresses) = @_;
 
     foreach my $addr (Email::Address->parse($string)) {
         my $address = $addr->address;
@@ -292,10 +308,8 @@ sub extract_addresses
             s/['"]$//;
             $_
         };
-        push @addresses, [ $phrase, $address ];
+        save_address([ $phrase, $address ], $addresses);
     }
-
-    return @addresses;
 }
 
 sub filter_sort
@@ -319,11 +333,47 @@ sub filter_sort
                   @$addresses;
 }
 
+sub save_address
+{
+    my ($address, $addresses) = @_;
+
+    my $char = lc substr($address->[1], 0, 1) // '?';
+    push @{$addresses{$char}}, $address;
+
+    if (@{$addresses{$char}} >= THRESHOLD_FLUSH) {
+        save_csv($csv_file_char->($CSV_file, $char), $addresses{$char});
+        @{$addresses{$char}} = ();
+    }
+}
+
 sub save_csv
 {
     my ($csv_file, $addresses) = @_;
 
-    open(my $fh, '>:encoding(UTF-8)', $csv_file) or die "$0: csv file `$csv_file' cannot be opened: $!\n";
+    open(my $fh, '>>:encoding(UTF-8)', $csv_file) or die "$0: CSV file `$csv_file' cannot be opened: $!\n";
+
+    foreach my $address (@$addresses) {
+        my $entry = join q{, }, @$address;
+        print {$fh} $entry, "\n";
+    }
+
+    close($fh);
+}
+
+sub read_csv
+{
+    my ($csv_file, $addresses) = @_;
+
+    open (my $fh, '<:encoding(UTF-8)', $csv_file) or die "$0: CSV file `$csv_file' cannot be opened: $!\n";
+    @$addresses = map { chomp; /^(.*), (.+)$/; [ $1, $2 ] } <$fh>;
+    close($fh);
+}
+
+sub write_csv
+{
+    my ($csv_file, $addresses) = @_;
+
+    open(my $fh, '>:encoding(UTF-8)', $csv_file) or die "$0: CSV file `$csv_file' cannot be opened: $!\n";
 
     foreach my $address (@$addresses) {
         my $entry = join q{, }, @$address;
