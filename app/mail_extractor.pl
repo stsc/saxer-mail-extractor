@@ -34,7 +34,7 @@ my $VERSION = '0.00';
 my $CSV_file = 'addresses.csv';
 
 my %opts;
-GetOptions(\%opts, qw(c|config=s h|help V|version)) or usage(1);
+GetOptions(\%opts, qw(c|config=s h|help parse-pdf V|version)) or usage(1);
 usage(0) if $opts{h};
 
 print "$0 v$VERSION\n" and exit 0 if $opts{V};
@@ -82,6 +82,7 @@ sub usage
 Usage: $0 [switches]
     -c, --config=<path>    path to config file
     -h, --help             this help screen
+        --parse-pdf        parse PDF (experimental)
     -V, --version          print version
 USAGE
     exit $exit_code;
@@ -213,7 +214,7 @@ sub gather_files
                 elsif ($dir_matches->($File::Find::dir, qr/Contact/)) {
                     parse_json($File::Find::name, $addresses); # all files JSON!
                 } # pdf
-                elsif ($dir_matches->($File::Find::dir, qr/OneDrive/)) {
+                elsif ($dir_matches->($File::Find::dir, qr/OneDrive/) && $opts{'parse-pdf'}) {
                     parse_pdf($File::Find::name, $addresses) if /(?!^)\.(.+)$/ && lc $1 eq 'pdf';
                 }
             }

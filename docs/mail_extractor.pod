@@ -2,6 +2,7 @@
 
     -c, --config=<path>    path to config file
     -h, --help             this help screen
+        --parse-pdf        parse PDF (experimental)
     -V, --version          print version
 
 =over 4
@@ -13,6 +14,10 @@ Path to configuration file.
 =item * C<-h, --help>
 
 Show usage screen.
+
+=item * C<--parse-pdf>
+
+Enable parsing PDFs (experimental).
 
 =item * C<-V, --version>
 
