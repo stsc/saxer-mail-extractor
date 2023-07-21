@@ -273,19 +273,24 @@ sub parse_pdf
 {
     my ($file, $addresses) = @_;
 
-    my $pdf = CAM::PDF->new($file);
-
+    my $pdf;
+    unless (eval { $pdf = CAM::PDF->new($file) }) {
+        return;
+    }
     my $pages;
     unless (eval { $pages = $pdf->numPages() }) {
         return;
     }
-
-    for (my $i = 1; $i <= $pages; $i++) {
-        my $tree = $pdf->getPageContentTree($i);
-        my $string = CAM::PDF::PageText->render($tree);
-        foreach my $addr (Email::Address->parse($string)) {
-            save_address([ '', $addr->address ], $addresses);
-        }
+    unless (eval {
+        for (my $i = 1; $i <= $pages; $i++) {
+            my $tree = $pdf->getPageContentTree($i);
+            my $string = CAM::PDF::PageText->render($tree);
+            foreach my $addr (Email::Address->parse($string)) {
+                save_address([ '', $addr->address ], $addresses);
+            }
+        } 1;
+    }) {
+        return;
     }
 }
 
