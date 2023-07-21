@@ -6,7 +6,7 @@
 # °°°°°°°°°°
 # Das Script muss über die Konsole via installiertem
 # Perl-Interpreter aufgerufen werden. Mögliche Aufrufoptionen
-# sind über die Hilfe Ausgabe (perl .\mail_extractor.pl --help)
+# sind über die Hilfe Ausgabe (perl ./mail_extractor.pl --help)
 # oder Dokumentation einsehbar.
 # -------------------------------------------------------------
 # Version: v0.00 - 2023-06-21 / sts
