@@ -280,14 +280,12 @@ sub parse_pdf
         return;
     }
 
-    my $string;
     for (my $i = 1; $i <= $pages; $i++) {
         my $tree = $pdf->getPageContentTree($i);
-        $string .= CAM::PDF::PageText->render($tree) . "\n\n";
-    }
-
-    foreach my $addr (Email::Address->parse($string)) {
-        save_address([ '', $addr->address ], $addresses);
+        my $string = CAM::PDF::PageText->render($tree);
+        foreach my $addr (Email::Address->parse($string)) {
+            save_address([ '', $addr->address ], $addresses);
+        }
     }
 }
 
