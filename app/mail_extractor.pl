@@ -28,6 +28,7 @@ use File::Type;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
 use JSON;
 use Net::IDN::Encode qw(email_to_unicode);
+use POSIX qw(strftime);
 
 my $VERSION = '0.00';
 
@@ -57,6 +58,15 @@ my $csv_file_char = sub
     return File::Spec->catfile($config{output_path}, $csv_file);
 };
 
+open(my $log_fh, '>', $config{log_file}) or die "$0: logging file `$config{log_file}' cannot be opened: $!\n";
+
+# auto-flush file handle
+my $old_fh = select($log_fh);
+$| = true;
+select($old_fh);
+
+log_print("Start of %s.", $0);
+
 my %addresses;
 gather_files($config{source_path}, \%addresses);
 
@@ -73,6 +83,10 @@ foreach my $char (keys %addresses) {
 
     write_csv($csv_file, \@addresses);
 }
+
+log_print("End of %s.", $0);
+
+close($log_fh);
 
 sub usage
 {
@@ -183,6 +197,14 @@ sub validate_config
     }
 }
 
+sub log_print
+{
+    my ($fmt, @args) = @_;
+
+    print {$log_fh} "[${\strftime(q(%b %d %H:%M:%S), localtime)}] ";
+    print {$log_fh} sprintf($fmt, @args), "\n";
+}
+
 sub gather_files
 {
     my ($source_path, $addresses) = @_;
@@ -226,7 +248,10 @@ sub parse_plain
 {
     my ($file, $addresses) = @_;
 
-    open(my $fh, '<', $file) or die "$0: plain file `$file' cannot be opened: $!\n";
+    open(my $fh, '<', $file) or do {
+        log_print("Plain: %s: cannot be opened: $!", File::Spec->abs2rel($file, $config{source_path}));
+        return;
+    };
     my $content = do { local $/; <$fh> };
     close($fh);
 
@@ -244,19 +269,25 @@ sub parse_json
 {
     my ($file, $addresses) = @_;
 
-    open(my $fh, '<', $file) or die "$0: JSON file `$file' cannot be opened: $!\n";
+    open(my $fh, '<', $file) or do {
+        log_print("JSON: %s: cannot be opened: $!", File::Spec->abs2rel($file, $config{source_path}));
+        return;
+    };
     my $content = do { local $/; <$fh> };
     close($fh);
 
     my $json;
     unless (eval { $json = decode_json($content) }) {
+        log_print("JSON: %s: decode_json() failed", File::Spec->abs2rel($file, $config{source_path}));
         return;
     }
     unless (exists $json->{client_metadata}) {
+        log_print("JSON: %s: client_metadata does not exist", File::Spec->abs2rel($file, $config{source_path}));
         return;
     }
     my $metadata = $json->{client_metadata};
     unless (exists $metadata->{displayName} && exists $metadata->{emailAddresses}) {
+        log_print("JSON: %s: displayName and emailAddresses does not exist", File::Spec->abs2rel($file, $config{source_path}));
         return;
     }
 
@@ -276,22 +307,24 @@ sub parse_pdf
 
     my $pdf;
     unless (eval { $pdf = CAM::PDF->new($file) }) {
+        log_print("PDF: %s: new() failed", File::Spec->abs2rel($file, $config{source_path}));
         return;
     }
     my $pages;
     unless (eval { $pages = $pdf->numPages() }) {
+        log_print("PDF: %s: numPages() failed", File::Spec->abs2rel($file, $config{source_path}));
         return;
     }
-    unless (eval {
-        for (my $i = 1; $i <= $pages; $i++) {
-            my $tree = $pdf->getPageContentTree($i);
-            my $string = CAM::PDF::PageText->render($tree);
-            foreach my $addr (Email::Address->parse($string)) {
-                save_address([ '', $addr->address ], $addresses);
-            }
-        } 1;
-    }) {
-        return;
+    for (my $i = 1; $i <= $pages; $i++) {
+        my $tree = $pdf->getPageContentTree($i);
+        my $string;
+        unless (eval { $string = CAM::PDF::PageText->render($tree) }) {
+            log_print("PDF: %s: render() failed", File::Spec->abs2rel($file, $config{source_path}));
+            return;
+        }
+        foreach my $addr (Email::Address->parse($string)) {
+            save_address([ '', $addr->address ], $addresses);
+        }
     }
 }
 
