@@ -24,6 +24,7 @@ use Email::Address;
 use Encode;
 use File::Find;
 use File::Spec;
+use File::Temp qw(tempdir);
 use File::Type;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
 use JSON;
@@ -51,11 +52,13 @@ my %config = parse_config($Config_file);
 
 validate_config(\%config);
 
+my $tmpdir = tempdir('mail-extractor.XXXXXXXXXX', TMPDIR => true);
+
 my $csv_file_char = sub
 {
     my ($file, $char) = @_;
     (my $csv_file = $file) =~ s/(?=\.)/_$char/;
-    return File::Spec->catfile($config{output_path}, $csv_file);
+    return File::Spec->catfile($tmpdir, $csv_file);
 };
 
 open(my $log_fh, '>', $config{log_file}) or die "$0: logging file `$config{log_file}' cannot be opened: $!\n";
