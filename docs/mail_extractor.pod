@@ -103,3 +103,71 @@ The value is not a directory.
 The value is not a regular file.
 
 =back
+
+=head1 LOGGING
+
+=head2 Diagnostics
+
+=head3 General
+
+=over 4
+
+=item * C<< Start of <script>. >>
+
+Script started.
+
+=item * C<< End of <script>. >>
+
+Script ended.
+
+=back
+
+=head3 Plain
+
+=over 4
+
+=item * C<< Plain: <file>: cannot be opened: <error> >>
+
+Plaintext source file cannot be opened. Prints error. Skips.
+
+=back
+
+=head3 JSON
+
+=over 4
+
+=item * C<< JSON: <file>: cannot be opened: <error> >>
+
+JSON source file cannot be opened. Prints error. Skips.
+
+=item * C<< JSON: <file>: decode_json() failed >>
+
+JSON source file failed to be decoded with JSON module's decode_json() function. Skips.
+
+=item * C<< JSON: <file>: client_metadata does not exist >>
+
+JSON data structure has no key 'client_metadata'. Skips.
+
+=item * C<< JSON: <file>: displayName and emailAddresses does not exist >>
+
+JSON data structure has no subkey 'displayName' and 'emailAddresses'. Skips.
+
+=back
+
+=head3 PDF
+
+=over 4
+
+=item * C<< PDF: <file>: new() failed >>
+
+PDF source file failed to be loaded with CAM::PDF module's new() constructor. Skips.
+
+=item * C<< PDF: <file>: numPages() failed >>
+
+PDF object failed to be processed with CAM::PDF module's numPages() method. Skips.
+
+=item * C<< PDF: <file>: render() failed >>
+
+PDF tree failed to be processed with CAM::PDF::PageText module's render() method. Skips.
+
+=back
