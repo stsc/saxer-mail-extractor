@@ -406,7 +406,7 @@ sub read_csv
 {
     my ($csv_file, $addresses) = @_;
 
-    open (my $fh, '<:encoding(UTF-8)', $csv_file) or die "$0: CSV file `$csv_file' cannot be opened: $!\n";
+    open(my $fh, '<:encoding(UTF-8)', $csv_file) or die "$0: CSV file `$csv_file' cannot be opened: $!\n";
     @$addresses = map { chomp; /^(.*), (.+)$/; [ $1, $2 ] } <$fh>;
     close($fh);
 }
