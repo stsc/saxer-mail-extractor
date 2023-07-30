@@ -35,6 +35,16 @@ my $VERSION = '0.00';
 
 my $CSV_file = 'addresses.csv';
 
+my $remove_quotes = sub
+{
+    local $_ = ${$_[0]};
+
+    s/^['"]//;
+    s/['"]$//;
+
+    ${$_[0]} = $_;
+};
+
 my %opts;
 GetOptions(\%opts, qw(c|config=s h|help parse-pdf V|version)) or usage(1);
 usage(0) if $opts{h};
@@ -342,12 +352,8 @@ sub extract_addresses
         $address = email_to_unicode($address);
 
         $phrase = decode('MIME-Header', $phrase);
-        $phrase = do {
-            local $_ = $phrase;
-            s/^['"]//;
-            s/['"]$//;
-            $_
-        };
+        $remove_quotes->(\$phrase);
+
         save_address([ $phrase, $address ], $addresses);
     }
 }
@@ -377,7 +383,7 @@ sub save_address
 {
     my ($address, $addresses) = @_;
 
-    $address->[1] =~ s/['"]//g;
+    $remove_quotes->(\$address->[1]);
 
     my $char = lc substr($address->[1], 0, 1) // '?';
     push @{$addresses{$char}}, $address;
