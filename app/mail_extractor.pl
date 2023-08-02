@@ -71,6 +71,8 @@ my $csv_file_char = sub
     return File::Spec->catfile($tmpdir, $csv_file);
 };
 
+my $Incremental = -e File::Spec->catfile($config{output_path}, $CSV_file);
+
 open(my $log_fh, '>', $config{log_file}) or die "$0: logging file `$config{log_file}' cannot be opened: $!\n";
 
 # auto-flush file handle
@@ -80,21 +82,45 @@ select($old_fh);
 
 log_print("Start of %s.", $0);
 
-my %addresses;
-gather_files($config{source_path}, \%addresses);
+my $time_stamp = strftime('%d.%m.%Y-%H.%M', localtime);
+my $csv_file_diff = File::Spec->catfile($config{output_path}, "addresses_diff-$time_stamp.csv");
 
-foreach my $char (keys %addresses) {
-    my $csv_file = $csv_file_char->($CSV_file, $char);
-
-    save_csv($csv_file, $addresses{$char}) if @{$addresses{$char}};
-    @{$addresses{$char}} = ();
+if ($Incremental) {
+    my @entries;
+    read_csv(File::Spec->catfile($config{output_path}, $CSV_file), \@entries);
+    my %seen = map { $_->[1] => true } @entries;
 
     my @addresses;
-    read_csv($csv_file, \@addresses);
+    gather_files($config{source_path}, \@addresses);
+
+    save_csv($csv_file_diff, \@addresses) if @addresses;
+    @addresses = ();
+
+    read_csv($csv_file_diff, \@addresses);
 
     filter_sort(\@addresses, $config{filter});
 
-    write_csv($csv_file, \@addresses);
+    @addresses = grep !$seen{$_->[1]}, @addresses;
+
+    write_csv($csv_file_diff, \@addresses);
+}
+else {
+    my %addresses;
+    gather_files($config{source_path}, \%addresses);
+
+    foreach my $char (keys %addresses) {
+        my $csv_file = $csv_file_char->($CSV_file, $char);
+
+        save_csv($csv_file, $addresses{$char}) if @{$addresses{$char}};
+        @{$addresses{$char}} = ();
+
+        my @addresses;
+        read_csv($csv_file, \@addresses);
+
+        filter_sort(\@addresses, $config{filter});
+
+        write_csv($csv_file, \@addresses);
+    }
 }
 
 log_print("End of %s.", $0);
@@ -385,12 +411,24 @@ sub save_address
 
     $remove_quotes->(\$address->[1]);
 
-    my $char = lc substr($address->[1], 0, 1) // '?';
-    push @{$addresses{$char}}, $address;
+    my ($csv_file, $stack);
 
-    if (@{$addresses{$char}} >= THRESHOLD_FLUSH) {
-        save_csv($csv_file_char->($CSV_file, $char), $addresses{$char});
-        @{$addresses{$char}} = ();
+    if ($Incremental) {
+        $stack = $addresses;
+        push @$stack, $address;
+        $csv_file = $csv_file_diff;
+    }
+    else {
+        my $char = lc substr($address->[1], 0, 1) // '?';
+        $addresses->{$char} ||= [];
+        $stack = $addresses->{$char};
+        push @$stack, $address;
+        $csv_file = $csv_file_char->($CSV_file, $char);
+    }
+
+    if (@$stack >= THRESHOLD_FLUSH) {
+        save_csv($csv_file, $stack);
+        @$stack = ();
     }
 }
 
