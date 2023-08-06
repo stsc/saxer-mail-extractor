@@ -346,7 +346,17 @@ sub parse_plain
         my $header = $1;
         foreach my $field (qw(From To Cc Bcc Reply-To)) {
             if ($header =~ /^$field:\s+(.+?)(?=\n^\S)/ims) {
-                extract_addresses($1, $addresses);
+                foreach my $addr (Email::Address->parse($1)) {
+                    my $address = $addr->address;
+                    my $phrase  = $addr->phrase // '';
+
+                    $address = email_to_unicode($address);
+
+                    $phrase = decode('MIME-Header', $phrase);
+                    $remove_quotes->(\$phrase);
+
+                    save_address([ $phrase, $address ], $addresses);
+                }
             }
         }
     }
@@ -412,23 +422,6 @@ sub parse_pdf
         foreach my $addr (Email::Address->parse($string)) {
             save_address([ '', $addr->address ], $addresses);
         }
-    }
-}
-
-sub extract_addresses
-{
-    my ($string, $addresses) = @_;
-
-    foreach my $addr (Email::Address->parse($string)) {
-        my $address = $addr->address;
-        my $phrase  = $addr->phrase // '';
-
-        $address = email_to_unicode($address);
-
-        $phrase = decode('MIME-Header', $phrase);
-        $remove_quotes->(\$phrase);
-
-        save_address([ $phrase, $address ], $addresses);
     }
 }
 
