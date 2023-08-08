@@ -34,6 +34,9 @@ use Time::Local qw(timelocal_posix);
 
 my $VERSION = '0.00';
 
+# Defines the filename template for temporary CSV output files;
+# the underscore and single character will be inserted before
+# the dot separator.  See also $csv_file_char().
 my $CSV_file = 'addresses.csv';
 
 my $read_file = sub
