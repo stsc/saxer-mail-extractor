@@ -110,7 +110,7 @@ my $old_fh = select($log_fh);
 $| = true;
 select($old_fh);
 
-log_print("Start of %s.", $0);
+log_print("Start of %s. [v%s]", $0, $VERSION);
 
 my $last_time_stamp = undef;
 my $Incremental = $get_last_timestamp->(\$last_time_stamp, '%d.%m.%Y');
