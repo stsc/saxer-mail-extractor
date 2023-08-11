@@ -66,7 +66,7 @@ usage(0) if $opts{h};
 
 print "$0 v$VERSION\n" and exit 0 if $opts{V};
 
-die "$0: -c/--config not specified or invalid\n" unless defined $opts{c} && $opts{c} =~ /\S+/;
+die "$0: -c/--config not specified or invalid. Invoke `$0 --help'.\n" unless defined $opts{c} && $opts{c} =~ /\S+/;
 
 my $Config_file = $opts{c};
 
@@ -184,7 +184,7 @@ sub usage
 
     print <<"USAGE";
 Usage: $0 [switches]
-    -c, --config=<path>    path to config file
+    -c, --config=<path>    path to config file (mandatory)
     -h, --help             this help screen
         --parse-pdf        parse PDF (experimental)
     -V, --version          print version

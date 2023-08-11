@@ -1,6 +1,6 @@
 =head1 COMMAND-LINE OPTIONS
 
-    -c, --config=<path>    path to config file
+    -c, --config=<path>    path to config file (mandatory)
     -h, --help             this help screen
         --parse-pdf        parse PDF (experimental)
     -V, --version          print version
@@ -9,7 +9,7 @@
 
 =item * C<< -c, --config=<path> >>
 
-Path to configuration file.
+Path to configuration file (mandatory).
 
 =item * C<-h, --help>
 
