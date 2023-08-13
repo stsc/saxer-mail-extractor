@@ -291,7 +291,7 @@ sub log_print
 {
     my ($fmt, @args) = @_;
 
-    print {$log_fh} "[${\strftime(q(%b %d %H:%M:%S), localtime)}] ";
+    print {$log_fh} "[${\strftime('%b %d %H:%M:%S', localtime)}] ";
     print {$log_fh} sprintf($fmt, @args), "\n";
 }
 
