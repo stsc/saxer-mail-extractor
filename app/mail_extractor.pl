@@ -387,7 +387,7 @@ sub parse_json
     }
     my $metadata = $json->{client_metadata};
     unless (exists $metadata->{displayName} && exists $metadata->{emailAddresses}) {
-        log_print("JSON: %s: displayName and emailAddresses does not exist", File::Spec->abs2rel($file, $config{source_path}));
+        log_print("JSON: %s: displayName and emailAddresses do not exist", File::Spec->abs2rel($file, $config{source_path}));
         return;
     }
 
