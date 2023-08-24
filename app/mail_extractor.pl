@@ -21,6 +21,7 @@ use constant THRESHOLD_FLUSH => 500;
 use CAM::PDF;
 use CAM::PDF::PageText;
 use Email::Address;
+use Email::Valid;
 use Encode;
 use File::Find;
 use File::Spec;
@@ -351,10 +352,11 @@ sub parse_plain
             if ($header =~ /^$field:\s+(.+?)(?=\n^\S)/ims) {
                 foreach my $addr (Email::Address->parse($1)) {
                     my $address = $addr->address;
-                    my $phrase  = $addr->phrase // '';
-
+                    $remove_quotes->(\$address);
+                    next unless Email::Valid->address($address);
                     $address = email_to_unicode($address);
 
+                    my $phrase = $addr->phrase // '';
                     $phrase = decode('MIME-Header', $phrase);
                     $remove_quotes->(\$phrase);
 
@@ -395,7 +397,11 @@ sub parse_json
 
     foreach my $email (@{$metadata->{emailAddresses}}) {
         foreach my $addr (Email::Address->parse($email->{address})) {
-            my $address = email_to_unicode($addr->address);
+            my $address = $addr->address;
+            $remove_quotes->(\$address);
+            next unless Email::Valid->address($address);
+            $address = email_to_unicode($address);
+
             save_address([ $phrase, $address ], $addresses);
         }
     }
@@ -423,7 +429,11 @@ sub parse_pdf
             return;
         }
         foreach my $addr (Email::Address->parse($string)) {
-            save_address([ '', $addr->address ], $addresses);
+            my $address = $addr->address;
+            $remove_quotes->(\$address);
+            next unless Email::Valid->address($address);
+
+            save_address([ '', $address ], $addresses);
         }
     }
 }
@@ -452,8 +462,6 @@ sub filter_sort
 sub save_address
 {
     my ($address, $addresses) = @_;
-
-    $remove_quotes->(\$address->[1]);
 
     my ($csv_file, $stack);
 
