@@ -9,7 +9,7 @@
 # sind über die Hilfe Ausgabe (perl ./mail_extractor.pl --help)
 # oder Dokumentation einsehbar.
 # -------------------------------------------------------------
-# Version: v1.00 - 2023-08-24 / sts
+# Version: v1.01 - 2023-09-06 / sts
 # ---------------------------------
 
 use strict;
@@ -33,7 +33,9 @@ use Net::IDN::Encode qw(email_to_unicode);
 use POSIX qw(strftime);
 use Time::Local qw(timelocal_posix);
 
-my $VERSION = '1.00';
+my $VERSION = '1.01';
+
+$SIG{INT} = sub { die "\nInterrupted, output may be incomplete!\n" };
 
 # Defines the filename template for temporary CSV output files;
 # the underscore and single character will be inserted before
