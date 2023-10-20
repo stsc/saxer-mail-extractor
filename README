@@ -1,0 +1,37 @@
+saxer-mail-extractor
+====================
+
+Description
+-----------
+saxer-mail-extractor is a set of scripts which extract mail-addresses
+recursively from sources.  The main script is written in Perl and
+extracts addresses from either plain, JSON or PDF source files.
+It supports two modes of operation currently: basic and incremental.
+
+Requirements
+------------
+perl
+CAM::PDF
+Email::Address
+Email::Valid
+File::Type
+JSON
+Net::IDN::Encode
+Time::Local
+
+Documentation
+-------------
+See POD (Plain Old Documentation) file: docs/mail_extractor.pod.
+
+Usage example
+-------------
+$ ./app/mail_extractor.pl -c ./config/mail_extractor.cfg --parse-pdf
+
+Contracting authority
+---------------------
+Saxer Group, Oberneuhofstrasse 5, 6340 Baar
+https://saxer.group/
+
+Author
+------
+Steven Schubiger <stsc@refcnt.org>
