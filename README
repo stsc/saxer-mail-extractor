@@ -29,7 +29,7 @@ $ ./app/mail_extractor.pl -c ./config/mail_extractor.cfg --parse-pdf
 
 Contracting authority
 ---------------------
-Saxer Group, Oberneuhofstrasse 5, 6340 Baar
+Saxer Group, Oberneuhofstrasse 5, CH-6340 Baar
 https://saxer.group/
 
 Author
